@@ -26,26 +26,45 @@ frame_placeholder = st.empty()
 prediction_placeholder = st.empty()
 
 def process_landmarks_from_frame(frame):
-    """Helper function to extract, format, and normalize landmarks from a single frame."""
+    """
+    Extracts, formats, and normalizes landmarks for BOTH left and right hands
+    to match the 126-feature dimension required by the trained LSTM model.
+    """
     rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     results = hands.process(rgb_frame)
-    current_frame_features = [0.0] * 63
 
-    if results.multi_hand_landmarks:
-        for hand_landmarks in results.multi_hand_landmarks:
+    # Structure empty templates for both hands (21 nodes * 3 axes = 63 values each)
+    left_hand_features = [0.0] * 63
+    right_hand_features = [0.0] * 63
+
+    # Check if any hands were detected
+    if results.multi_hand_landmarks and results.multi_handedness:
+        # Loop through detected hands and identify if they are Left or Right
+        for hand_landmarks, handedness in zip(results.multi_hand_landmarks, results.multi_handedness):
+            hand_type = handedness.classification[0].label # "Left" or "Right"
+
             raw_pts = []
             for lm in hand_landmarks.landmark:
                 raw_pts.extend([lm.x, lm.y, lm.z])
 
-            # Center-align spatial metrics relative to the wrist root point
+            # Normalize coordinates relative to the wrist root point (the first item)
             base_x, base_y, base_z = raw_pts[0], raw_pts[1], raw_pts[2]
             norm_pts = []
             for i in range(0, len(raw_pts), 3):
                 norm_pts.extend([raw_pts[i] - base_x, raw_pts[i+1] - base_y, raw_pts[i+2] - base_z])
 
+            # Assign coordinates to the correct hand slot
             if len(norm_pts) == 63:
-                current_frame_features = norm_pts
-    return current_frame_features
+                if hand_type == "Left":
+                    left_hand_features = norm_pts
+                elif hand_type == "Right":
+                    right_hand_features = norm_pts
+
+    # Combine both hand features together to create the exact 126-feature row expected by the model
+    # Layout order: Left Hand (63) + Right Hand (63) = 126
+    combined_features = left_hand_features + right_hand_features
+    return combined_features
+
 
 # ==========================================
 # MODE A: LIVE WEB CAMERA STREAMING
