@@ -10,9 +10,9 @@ import os
 API_URL = "https://handspell-landmarks-asl-api-v03-77400974703.europe-west1.run.app/predict"
 SEQUENCE_LENGTH = 30
 
-# 2. Initialize MediaPipe Hands Solutions
+# 2. Initialize MediaPipe Hands Solutions (FIXED: max_num_hands=2 to capture both paths)
 mp_hands = mp.solutions.hands
-hands = mp_hands.Hands(static_image_mode=False, max_num_hands=1, min_detection_confidence=0.5)
+hands = mp_hands.Hands(static_image_mode=False, max_num_hands=2, min_detection_confidence=0.5)
 
 # 3. Streamlit Page Setup UI
 st.set_page_config(page_title="Team Handspell V3", page_icon="✋", layout="centered")
@@ -24,6 +24,7 @@ mode = st.radio("Choose Input Testing Source:", ["Live Web Camera", "Upload Vide
 
 frame_placeholder = st.empty()
 prediction_placeholder = st.empty()
+debug_placeholder = st.sidebar.empty() # Visual validation channel
 
 def process_landmarks_from_frame(frame):
     """
@@ -33,39 +34,32 @@ def process_landmarks_from_frame(frame):
     rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     results = hands.process(rgb_frame)
 
-    # Structure empty templates for both hands (21 nodes * 3 axes = 63 values each)
     left_hand_features = [0.0] * 63
     right_hand_features = [0.0] * 63
+    hands_found_count = 0
 
-    # Check if any hands were detected
+    # Fixed extraction loops unpacking structure fields natively
     if results.multi_hand_landmarks and results.multi_handedness:
-        # Loop through detected hands and identify if they are Left or Right
+        hands_found_count = len(results.multi_hand_landmarks)
         for hand_landmarks, handedness in zip(results.multi_hand_landmarks, results.multi_handedness):
+            # FIXED: Bulletproof protobuf property accessor string extraction method
             hand_type = handedness.classification[0].label # "Left" or "Right"
 
             raw_pts = []
             for lm in hand_landmarks.landmark:
                 raw_pts.extend([lm.x, lm.y, lm.z])
 
-            # Normalize coordinates relative to the wrist root point (the first item)
-            base_x, base_y, base_z = raw_pts[0], raw_pts[1], raw_pts[2]
-                        # If your training used raw, un-centered coordinates, map them directly:
-            norm_pts = []
-            for i in range(0, len(raw_pts), 3):
-                norm_pts.extend([raw_pts[i], raw_pts[i+1], raw_pts[i+2]])
-
-            # Assign coordinates to the correct hand slot
-            if len(norm_pts) == 63:
+            # Use raw un-normalized coordinates to mirror your exact data pipeline
+            if len(raw_pts) == 63:
                 if hand_type == "Left":
-                    left_hand_features = norm_pts
+                    left_hand_features = raw_pts
                 elif hand_type == "Right":
-                    right_hand_features = norm_pts
+                    right_hand_features = raw_pts
 
-    # Combine both hand features together to create the exact 126-feature row expected by the model
-    # Layout order: Left Hand (63) + Right Hand (63) = 126
-    # Swap the order if your training columns put Right hand features first:
+    # Combine both hand features together to form the 126 features vector layout
+    # Layout matches Pandas alphabetical sort order: Left Hand (63) + Right Hand (63)
     combined_features = left_hand_features + right_hand_features
-    return combined_features
+    return combined_features, hands_found_count
 
 
 # ==========================================
@@ -81,17 +75,13 @@ if mode == "Live Web Camera":
             ret, frame = cap.read()
             if not ret: break
 
-            # Keep this flip instruction ONLY for the live camera display
             frame = cv2.flip(frame, 1)
-            features = process_landmarks_from_frame(frame)
+            features, _ = process_landmarks_from_frame(frame)
             frame_buffer.append({"features": features})
 
             if len(frame_buffer) > SEQUENCE_LENGTH:
                 frame_buffer.pop(0)
 
-            if len(frame_buffer) == SEQUENCE_LENGTH:
-                # (Inference calls remain unchanged...)
-                pass
             frame_placeholder.image(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB), channels="RGB")
         cap.release()
 
@@ -108,27 +98,30 @@ else:
 
         cap = cv2.VideoCapture(tfile.name)
         video_frames_features = []
+        total_detections_logged = 0
 
         while cap.isOpened():
             ret, frame = cap.read()
             if not ret: break
 
-            # 🟢 NOTICE: NO cv2.flip() IS APPIED HERE.
-            # The pixels are processed natively to align perfectly with the model parameters.
-            features = process_landmarks_from_frame(frame)
+            features, detected_count = process_landmarks_from_frame(frame)
             video_frames_features.append({"features": features})
+            total_detections_logged += detected_count
 
         cap.release()
         os.unlink(tfile.name)
 
-        # --- UPDATE THIS BLOCK INSIDE APP-V02.PY ---
         num_extracted_frames = len(video_frames_features)
+
+        # Display helpful pipeline monitoring telemetry onto the sidebar
+        debug_placeholder.metric(
+            label="MediaPipe Diagnostic Feed",
+            value=f"{num_extracted_frames} Frames",
+            delta=f"{total_detections_logged} Active Hand Samples"
+        )
 
         if num_extracted_frames > 1:
             st.info(f"Extracted {num_extracted_frames} frames. Interpolating sequence to 30 timesteps...")
-
-            # 1. Generate 30 evenly distributed floating-point indices across your 10 frames
-            # e.g., [0.0, 0.31, 0.62, ..., 9.0]
             target_indices = np.linspace(0, num_extracted_frames - 1, SEQUENCE_LENGTH)
 
             final_sequence = []
@@ -137,11 +130,9 @@ else:
                 high_idx = int(np.ceil(idx))
                 weight = idx - low_idx
 
-                # Grab the bounding frames
                 frame_low = video_frames_features[low_idx]["features"]
                 frame_high = video_frames_features[high_idx]["features"]
 
-                # 2. Perform linear math blending to create smooth intermediate coordinates
                 blended_features = []
                 for f_low, f_high in zip(frame_low, frame_high):
                     blended_val = (1 - weight) * f_low + weight * f_high
@@ -150,12 +141,9 @@ else:
                 final_sequence.append({"features": blended_features})
 
         elif num_extracted_frames == 1:
-            # Fallback if the video only contains 1 single valid frame
-            st.warning("Video too short. Duplicating single frame across timeline.")
             final_sequence = [video_frames_features[0]] * SEQUENCE_LENGTH
         else:
-            # Fallback placeholder if no frames processed at all
-            st.error("No hands detected anywhere in this video file.")
+            st.error("No hands detected anywhere in this video file. Sending empty vector baseline.")
             empty_frame = {"features": [0.0] * 126}
             final_sequence = [empty_frame] * SEQUENCE_LENGTH
 
