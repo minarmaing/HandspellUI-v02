@@ -1,6 +1,0 @@
-# streamlit
-# requests
-streamlit==1.35.0
-mediapipe==0.10.30
-requests==2.32.3
-numpy==1.26.4

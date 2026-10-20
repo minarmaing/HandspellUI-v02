@@ -1,17 +1,41 @@
 [project]
-name = "handspellfe"
-version = "0.1.0"
-description = "Add your description here"
+name = "handspellui-v02"
+version = "2.0.0"
+description = "Real-time ASL fingerspelling sequence evaluation playground interface powered by Streamlit and an LSTM cloud engine."
 readme = "README.md"
+requires-python = ">=3.10"
 authors = [
-    { name = "Afonso Silva" }
+    { name = "Minar Maing", email = "minar.maing@gmail.com" }
 ]
-requires-python = ">=3.12"
-dependencies = []
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Framework :: Streamlit",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence"
+]
 
-[project.scripts]
-handspellfe = "handspellfe:main"
+# Core runtime dependencies that Streamlit Cloud and 'uv' will auto-install
+dependencies = [
+    "streamlit>=1.35.0",
+    "mediapipe>=0.10.14",
+    "requests>=2.32.3",
+    "numpy>=1.26.4",
+]
 
 [build-system]
-requires = ["uv_build>=0.12.23,<0.13.0"]
-build-backend = "uv_build"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.uv]
+managed = true
+package = false
+
+[tool.streamlit]
+# Injects global UI customization parameters to make your app look cleaner
+browser.gatherUsageStats = false
+server.headless = true
+server.port = 8501
+theme.primaryColor = "#FF4B4B"
+theme.backgroundColor = "#FFFFFF"
+theme.secondaryBackgroundColor = "#F0F2F6"
+theme.textColor = "#31333F"
+theme.font = "sans serif"
