@@ -49,9 +49,10 @@ def process_landmarks_from_frame(frame):
 
             # Normalize coordinates relative to the wrist root point (the first item)
             base_x, base_y, base_z = raw_pts[0], raw_pts[1], raw_pts[2]
+                        # If your training used raw, un-centered coordinates, map them directly:
             norm_pts = []
             for i in range(0, len(raw_pts), 3):
-                norm_pts.extend([raw_pts[i] - base_x, raw_pts[i+1] - base_y, raw_pts[i+2] - base_z])
+                norm_pts.extend([raw_pts[i], raw_pts[i+1], raw_pts[i+2]])
 
             # Assign coordinates to the correct hand slot
             if len(norm_pts) == 63:
@@ -63,7 +64,7 @@ def process_landmarks_from_frame(frame):
     # Combine both hand features together to create the exact 126-feature row expected by the model
     # Layout order: Left Hand (63) + Right Hand (63) = 126
     # Swap the order if your training columns put Right hand features first:
-    combined_features = right_hand_features + left_hand_features
+    combined_features = left_hand_features + right_hand_features
     return combined_features
 
 
