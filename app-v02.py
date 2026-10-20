@@ -7,7 +7,7 @@ import tempfile
 import os
 
 # 1. API Configuration - Points to your live V3 GCP Endpoint
-API_URL = "https://handspell-landmarks-asl-api-v03-77400974703.europe-west1.run.app/predict"
+API_URL = "https://handspell-landmarks-asl-api-v03-77400974703.europe-west1.run.app"
 SEQUENCE_LENGTH = 30
 
 # 2. Initialize MediaPipe Hands Solutions
