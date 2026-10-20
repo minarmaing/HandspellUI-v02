@@ -131,16 +131,43 @@ else:
         cap.release()
         os.unlink(tfile.name)  # Clean up temp file storage disk space
 
-        # --- Feature Alignment Boundary Rules ---
-        # Reshape or pad the video sequence list to fit your LSTM input requirements (exactly 30 frames)
-        if len(video_frames_features) >= SEQUENCE_LENGTH:
-            # Truncate clips that are too long
-            final_sequence = video_frames_features[:SEQUENCE_LENGTH]
+        # --- UPDATE THIS BLOCK INSIDE APP-V02.PY ---
+        num_extracted_frames = len(video_frames_features)
+
+        if num_extracted_frames > 1:
+            st.info(f"Extracted {num_extracted_frames} frames. Interpolating sequence to 30 timesteps...")
+
+            # 1. Generate 30 evenly distributed floating-point indices across your 10 frames
+            # e.g., [0.0, 0.31, 0.62, ..., 9.0]
+            target_indices = np.linspace(0, num_extracted_frames - 1, SEQUENCE_LENGTH)
+
+            final_sequence = []
+            for idx in target_indices:
+                low_idx = int(np.floor(idx))
+                high_idx = int(np.ceil(idx))
+                weight = idx - low_idx
+
+                # Grab the bounding frames
+                frame_low = video_frames_features[low_idx]["features"]
+                frame_high = video_frames_features[high_idx]["features"]
+
+                # 2. Perform linear math blending to create smooth intermediate coordinates
+                blended_features = []
+                for f_low, f_high in zip(frame_low, frame_high):
+                    blended_val = (1 - weight) * f_low + weight * f_high
+                    blended_features.append(blended_val)
+
+                final_sequence.append({"features": blended_features})
+
+        elif num_extracted_frames == 1:
+            # Fallback if the video only contains 1 single valid frame
+            st.warning("Video too short. Duplicating single frame across timeline.")
+            final_sequence = [video_frames_features[0]] * SEQUENCE_LENGTH
         else:
-            # Pad shorter video files with empty arrays to reach the 30-frame milestone
-            padding_len = SEQUENCE_LENGTH - len(video_frames_features)
-            empty_frame = {"features": [0.0] * 63}
-            final_sequence = video_frames_features + [empty_frame] * padding_len
+            # Fallback placeholder if no frames processed at all
+            st.error("No hands detected anywhere in this video file.")
+            empty_frame = {"features": [0.0] * 126}
+            final_sequence = [empty_frame] * SEQUENCE_LENGTH
 
         # Send the complete, compiled 30-frame sequence to your live GCP API endpoint
         with st.spinner("Analyzing sequence transitions on GCP Cloud Run..."):
