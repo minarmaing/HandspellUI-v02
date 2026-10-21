@@ -30,7 +30,7 @@ if uploaded_files:
                     st.image(image, caption=file.name, width=120)
 
                     response = requests.post(
-                        API_BASE_URL,
+                        API_BASE_URL + "/predict",
                         files={
                             "file": (
                                 file.name,
