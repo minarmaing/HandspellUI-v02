@@ -15,7 +15,7 @@ classifiers = [
 
 # Core runtime dependencies that Streamlit Cloud and 'uv' will auto-install
 dependencies = [
-    "streamlit>=1.45.1",
+    "streamlit==1.45.1",
     "mediapipe==0.10.14",
     "requests>=2.32.3",
     "numpy>=1.26.4",
