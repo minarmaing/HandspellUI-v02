@@ -73,4 +73,5 @@ if uploaded_files:
     except (requests.RequestException, ValueError, KeyError, TypeError) as e:
         letters.append("?")
         st.error(f"Could not predict {file.name}: {e}")
-st.subheader("Result: " + "".join(letters))
+
+    st.subheader("Result: " + "".join(letters))
