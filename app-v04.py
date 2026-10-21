@@ -3,7 +3,7 @@ import requests
 
 # 1. Page Configuration & Theme Settings
 st.set_page_config(
-    page_title="HandSpell AI - Sign Language Workspace",
+    page_title="HandSpell - Sign Language Workspace",
     page_icon="🖐️",
     layout="wide",
     initial_sidebar_state="expanded"
