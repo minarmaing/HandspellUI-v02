@@ -17,36 +17,26 @@ if uploaded_files:
 
     if st.button("Predict"):
         letters = []
-        for file in ordered_files:
-            st.image(
-                file.getvalue(),
-                caption=file.name,
-                width=150,
-            )
 
-            try:
-                image = Image.open(file)
-                image.load()
-                st.image(image, width=300)
-            except (UnidentifiedImageError, OSError, ValueError):
-                st.error("Cannot read this image. Please upload another image.")
-                st.stop()
-
-    try:
         with st.spinner("Classifying..."):
             for file in ordered_files:
-                response = requests.post(
-                    API_BASE_URL,
-                    files={
-                        "file": (
-                            file.name,
-                            file.getvalue(),
-                            file.type,
-                        )
-                    },
-                    timeout=120,
-                )
-                if response.status_code == 200:
+                try:
+                    image = Image.open(file)
+                    image.load()
+                    st.image(image, caption=file.name, width=150)
+
+                    response = requests.post(
+                        f"{API_BASE_URL}/predict",
+                        files={
+                            "file": (
+                                file.name,
+                                file.getvalue(),
+                                file.type,
+                            )
+                        },
+                        timeout=120,
+                    )
+                    response.raise_for_status()
                     result = response.json()
 
                     letter = result["prediction"]
@@ -54,24 +44,23 @@ if uploaded_files:
 
                     if letter in ("NO HAND", "NO HAND/SIGN"):
                         letters.append("?")
-                        st.warning("No hand/sign detected.")
+                        st.warning(f"{file.name}: No hand/sign detected.")
                     else:
                         letters.append(letter)
                         st.write(f"Letter: {letter}")
 
-                    if confidence is not None:
-                        st.write(f"Model score: {confidence:.1%}")
+                        if confidence is not None:
+                            st.write(f"Model score: {confidence:.1%}")
 
-                    # letters.append(letter)
+                except (
+                    requests.RequestException,
+                    UnidentifiedImageError,
+                    OSError,
+                    ValueError,
+                    KeyError,
+                    TypeError,
+                ) as e:
+                    letters.append("?")
+                    st.error(f"Could not predict {file.name}: {e}")
 
-                    st.success(f"Predicted letter: {letter}")
-                    if confidence is not None:
-                        st.write(f"Model score: {confidence:.1%}")
-                    st.json(result)
-                else:
-                    st.error(f"Error {response.status_code}: {response.text}")
-    except (requests.RequestException, ValueError, KeyError, TypeError) as e:
-        letters.append("?")
-        st.error(f"Could not predict {file.name}: {e}")
-
-    st.subheader("Result: " + "".join(letters))
+        st.subheader("Result: " + "".join(letters))
