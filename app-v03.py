@@ -32,14 +32,22 @@ if uploaded_file is not None:
                 # Prepare payload file mapping
                 # Reset file pointer to read from beginning
                 uploaded_file.seek(0)
+
+                # 2. Separate text parameter into the URL string
+                strategy_param = "normalized" if "Normalized" in model_type else "raw"
+                BASE_API_URL = "https://handspell-landmarks-asl-api-v03-77400974703.europe-west1.run.app"
+                TARGET_URL = f"{BASE_API_URL}/predict?model_strategy={strategy_param}"
+
                 files = {"file": (uploaded_file.name, uploaded_file.getvalue(), uploaded_file.type)}
+
                 data = {"model_strategy": "normalized" if "Normalized" in model_type else "raw"}
 
                 # Send HTTP POST request to your running API
-                response = requests.post(API_URL, files=files, timeout=60)
-
+                response = requests.post(TARGET_URL, files=files, timeout=60)
                 if response.status_code == 200:
                     result = response.json()
+                    st.write("### API Response:")
+                    st.json(result)
 
                     # Extract variables from API response schema
                     # Adjust dictionary keys to match your exact API JSON response structure
