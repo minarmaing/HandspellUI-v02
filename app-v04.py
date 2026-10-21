@@ -12,21 +12,21 @@ st.write("Upload a hand sign image to predict the letter.")
 uploaded_files = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"], accept_multiple_files=True,)
 
 if uploaded_files:
-    ordered_files = sorted(uploaded_files, key=lambda f: f.name)
-    st.write("Image order:", " → ".join(f.name for f in ordered_files))
+        ordered_files = sorted(uploaded_files, key=lambda f: f.name)
 
     if st.button("Predict"):
         letters = []
+        columns = st.columns(len(ordered_files))
 
-        with st.spinner("Classifying..."):
-            for file in ordered_files:
+        for column, file in zip(columns, ordered_files):
+            with column:
                 try:
                     image = Image.open(file)
                     image.load()
-                    st.image(image, caption=file.name, width=150)
+                    st.image(image, caption=file.name, width=120)
 
                     response = requests.post(
-                        f"{API_BASE_URL}/predict",
+                        API_BASE_URL,
                         files={
                             "file": (
                                 file.name,
@@ -43,24 +43,24 @@ if uploaded_files:
                     confidence = result.get("confidence")
 
                     if letter in ("NO HAND", "NO HAND/SIGN"):
-                        letters.append("?")
-                        st.warning(f"{file.name}: No hand/sign detected.")
+                        letter = "?"
+                        st.warning("No hand detected")
                     else:
-                        letters.append(letter)
-                        st.write(f"Letter: {letter}")
+                        st.subheader(letter)
 
-                        if confidence is not None:
-                            st.write(f"Model score: {confidence:.1%}")
+                    letters.append(letter)
+
+                    if confidence is not None:
+                        st.caption(f"Score: {confidence:.1%}")
 
                 except (
                     requests.RequestException,
-                    UnidentifiedImageError,
                     OSError,
                     ValueError,
                     KeyError,
                     TypeError,
                 ) as e:
                     letters.append("?")
-                    st.error(f"Could not predict {file.name}: {e}")
+                    st.error(str(e))
 
-        st.subheader("Result: " + "".join(letters))
+        st.subheader("Predicted word: " + "".join(letters))
