@@ -36,7 +36,7 @@ if uploaded_file is not None:
                 data = {"model_strategy": "normalized" if "Normalized" in model_type else "raw"}
 
                 # Send HTTP POST request to your running API
-                response = requests.post(API_URL, files=files, data=data, timeout=60)
+                response = requests.post(API_URL, files=files, timeout=60)
 
                 if response.status_code == 200:
                     result = response.json()
