@@ -16,7 +16,8 @@ uploaded_files = st.file_uploader(
 )
 
 if uploaded_files:
-    ordered_files = sorted(uploaded_files, key=lambda f: f.name)
+    #ordered_files = sorted(uploaded_files, key=lambda f: f.name)
+    ordered_files = uploaded_files
     if st.button("Predict"):
         letters = []
         columns = st.columns(len(ordered_files))
