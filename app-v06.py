@@ -297,9 +297,15 @@ def main():
                         </div>
                     """)
 
+                cards_html = "".join(
+                line.strip()
+                for card in cards
+                for line in card.splitlines()
+                )
+
                 st.markdown(
                     '<div style="display:flex; flex-wrap:wrap; gap:12px;">'
-                    + "".join(cards)
+                    + cards_html
                     + "</div>",
                     unsafe_allow_html=True,
                 )
