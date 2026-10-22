@@ -813,6 +813,7 @@ dependencies = [
     { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.11.*'" },
     { name = "numpy", version = "2.5.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+    { name = "pillow" },
     { name = "requests" },
     { name = "streamlit" },
 ]
@@ -821,6 +822,7 @@ dependencies = [
 requires-dist = [
     { name = "mediapipe", specifier = "==0.10.14" },
     { name = "numpy", specifier = ">=1.26.4" },
+    { name = "pillow", specifier = ">=11.3.0" },
     { name = "requests", specifier = ">=2.32.3" },
     { name = "streamlit", specifier = "==1.45.1" },
 ]
