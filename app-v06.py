@@ -246,16 +246,63 @@ def main():
         elif mode == "Single letter":
             render_result(results[0], threshold)
 
-            candidates = results[0].get("top_candidates", [])
-            if candidates:
-                st.write("Top 3 candidates")
-                for rank, candidate in enumerate(candidates, start=1):
-                    label = "Highest score" if rank == 1 else f"Candidate {rank}"
+            candidates = results[0].get("top_candidates", [])[:3]
 
-                    st.write(
-                        f"{label}: **{candidate['letter']}** "
-                        f"— {candidate['confidence']:.1%}"
-                    )
+            if candidates:
+                st.markdown("#### Top 3 candidates")
+
+            cards = []
+
+            for rank, candidate in enumerate(candidates, start=1):
+                letter = html.escape(str(candidate["letter"]))
+                score = float(candidate["confidence"])
+                percentage = max(0.0, min(score, 1.0)) * 100
+
+                winner = rank == 1
+                background = "#FFF1ED" if winner else "#F8FAFC"
+                border = "#E86751" if winner else "#E2E8F0"
+                color = "#C94F3D" if winner else "#475569"
+                label = "BEST MATCH" if winner else f"#{rank} CANDIDATE"
+
+                cards.append(f"""
+                    <div style="
+                        flex:1; min-width:100px;
+                        padding:18px; border-radius:14px;
+                        background:{background};
+                        border:1px solid {border};">
+                        <div style="
+                            font-size:11px; font-weight:600;
+                            letter-spacing:1px; color:{color};">
+                            {label}
+                        </div>
+                        <div style="
+                            font-size:42px; font-weight:700;
+                            line-height:1.3; margin-top:10px;
+                            color:{color};">
+                            {letter}
+                        </div>
+                        <div style="
+                            font-size:20px; font-weight:600;
+                            margin:4px 0 14px; color:{color};">
+                            {percentage:.1f}%
+                        </div>
+                        <div style="
+                            height:5px; background:#E2E8F0;
+                            border-radius:5px; overflow:hidden;">
+                            <div style="
+                                width:{percentage}%; height:100%;
+                                background:{border};">
+                            </div>
+                        </div>
+                    </div>
+                """)
+
+            st.markdown(
+                '<div style="display:flex; flex-wrap:wrap; gap:12px;">'
+                + "".join(cards)
+                + "</div>",
+                unsafe_allow_html=True,
+            )
         else:
             word = "".join(accepted_letter(r, threshold) for r in results)
             st.subheader("Predicted word")
