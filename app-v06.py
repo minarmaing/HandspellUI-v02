@@ -297,12 +297,12 @@ def main():
                     </div>
                     """)
 
-                    st.markdown(
+                st.markdown(
                         '<div style="display:flex; flex-wrap:wrap; gap:12px;">'
                         + "".join(cards)
                         + "</div>",
                         unsafe_allow_html=True,
-                    )
+                )
         else:
             word = "".join(accepted_letter(r, threshold) for r in results)
             st.subheader("Predicted word")
