@@ -6,6 +6,11 @@ import numpy as np
 import tempfile
 import os
 
+st.warning("Experimental prototype — accuracy is being improved.")
+
+if st.button("← Back to HandSpell Studio"):
+    st.switch_page("app-v06.py")
+
 # 1. API Configuration - Points to your live V3 GCP Endpoint
 API_URL = "https://handspell-landmarks-asl-api-v03-77400974703.europe-west1.run.app/predict"
 SEQUENCE_LENGTH = 30
