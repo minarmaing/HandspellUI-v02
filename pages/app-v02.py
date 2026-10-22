@@ -6,6 +6,12 @@ import numpy as np
 import tempfile
 import os
 
+st.set_page_config(
+    page_title="HandSpell Video",
+    page_icon="🎬",
+    layout="wide",
+)
+
 st.warning("Experimental prototype — accuracy is being improved.")
 
 if st.button("← Back to HandSpell Studio"):
