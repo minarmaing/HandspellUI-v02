@@ -272,10 +272,8 @@ def main():
             """
         )
 
-        st.link_button(
-            "Open experimental video prototype ↗",
-            "https://handspell-landmarks-asl-api-v03-77400974703.europe-west1.run.app/predict",
-        )
+        if st.button("🎬 Open experimental video prototype"):
+            st.switch_page("pages/video_experiment.py")
 
         st.caption(
             "Current demo: static images and fingerspelled words. "
