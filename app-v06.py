@@ -72,6 +72,7 @@ def request_prediction(url, image_bytes):
     payload = response.json()
     return {
         **normalize_result(payload),
+        "top_candidates": payload.get("top_candidates", []),
         "raw": payload,
         "elapsed": time.perf_counter() - start,
         "url": response.url,
