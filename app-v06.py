@@ -251,21 +251,19 @@ def main():
             if candidates:
                 st.markdown("#### Top 3 candidates")
 
-                cards = []
-
                 for rank, candidate in enumerate(candidates, start=1):
-                letter = candidate["letter"]
-                score = max(
-                    0.0,
-                    min(float(candidate["confidence"]), 1.0),
-                )
+                    letter = candidate["letter"]
+                    score = max(
+                        0.0,
+                        min(float(candidate["confidence"]), 1.0),
+                    )
 
-                label = f"Letter {letter}"
-                if rank == 1:
-                    label += " (Best match)"
+                    label = f"Letter {letter}"
+                    if rank == 1:
+                        label += " (Best match)"
 
-                st.write(f"**{label} — {score:.1%}**")
-                st.progress(score)
+                    st.write(f"**{label} — {score:.1%}**")
+                    st.progress(score)
         else:
             word = "".join(accepted_letter(r, threshold) for r in results)
             st.subheader("Predicted word")
