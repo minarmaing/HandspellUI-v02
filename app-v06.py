@@ -251,21 +251,21 @@ def main():
             if candidates:
                 st.markdown("#### Top 3 candidates")
 
-            cards = []
+                cards = []
 
-            for rank, candidate in enumerate(candidates, start=1):
-                letter = html.escape(str(candidate["letter"]))
-                score = float(candidate["confidence"])
-                percentage = max(0.0, min(score, 1.0)) * 100
+                for rank, candidate in enumerate(candidates, start=1):
+                    letter = html.escape(str(candidate["letter"]))
+                    score = float(candidate["confidence"])
+                    percentage = max(0.0, min(score, 1.0)) * 100
 
-                winner = rank == 1
-                background = "#FFF1ED" if winner else "#F8FAFC"
-                border = "#E86751" if winner else "#E2E8F0"
-                color = "#C94F3D" if winner else "#475569"
-                label = "BEST MATCH" if winner else f"#{rank} CANDIDATE"
+                    winner = rank == 1
+                    background = "#FFF1ED" if winner else "#F8FAFC"
+                    border = "#E86751" if winner else "#E2E8F0"
+                    color = "#C94F3D" if winner else "#475569"
+                    label = "BEST MATCH" if winner else f"#{rank} CANDIDATE"
 
-                cards.append(f"""
-                    <div style="
+                    cards.append(f"""
+                        <div style="
                         flex:1; min-width:100px;
                         padding:18px; border-radius:14px;
                         background:{background};
@@ -295,14 +295,14 @@ def main():
                             </div>
                         </div>
                     </div>
-                """)
+                    """)
 
-                st.markdown(
-                    '<div style="display:flex; flex-wrap:wrap; gap:12px;">'
-                    + "".join(cards)
-                    + "</div>",
-                    unsafe_allow_html=True,
-                )
+                    st.markdown(
+                        '<div style="display:flex; flex-wrap:wrap; gap:12px;">'
+                        + "".join(cards)
+                        + "</div>",
+                        unsafe_allow_html=True,
+                    )
         else:
             word = "".join(accepted_letter(r, threshold) for r in results)
             st.subheader("Predicted word")
