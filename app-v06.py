@@ -273,7 +273,7 @@ def main():
         )
 
         if st.button("🎬 Open experimental video prototype"):
-            st.switch_page("/pages/app-v02.py")
+            st.switch_page("pages/app-v02.py")
 
         st.caption(
             "Current demo: static images and fingerspelled words. "
