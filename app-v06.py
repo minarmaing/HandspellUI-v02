@@ -266,35 +266,35 @@ def main():
 
                     cards.append(f"""
                         <div style="
-                        flex:1; min-width:100px;
-                        padding:18px; border-radius:14px;
-                        background:{background};
-                        border:1px solid {border};">
-                        <div style="
-                            font-size:11px; font-weight:600;
-                            letter-spacing:1px; color:{color};">
-                            {label}
-                        </div>
-                        <div style="
-                            font-size:42px; font-weight:700;
-                            line-height:1.3; margin-top:10px;
-                            color:{color};">
-                            {letter}
-                        </div>
-                        <div style="
-                            font-size:20px; font-weight:600;
-                            margin:4px 0 14px; color:{color};">
-                            {percentage:.1f}%
-                        </div>
-                        <div style="
-                            height:5px; background:#E2E8F0;
-                            border-radius:5px; overflow:hidden;">
+                            flex:1; min-width:100px;
+                            padding:18px; border-radius:14px;
+                            background:{background};
+                            border:1px solid {border};">
                             <div style="
-                                width:{percentage}%; height:100%;
-                                background:{border};">
+                                font-size:11px; font-weight:600;
+                                letter-spacing:1px; color:{color};">
+                                {label}
+                            </div>
+                            <div style="
+                                font-size:42px; font-weight:700;
+                                line-height:1.3; margin-top:10px;
+                                color:{color};">
+                                {letter}
+                            </div>
+                            <div style="
+                                font-size:20px; font-weight:600;
+                                margin:4px 0 14px; color:{color};">
+                                {percentage:.1f}%
+                            </div>
+                            <div style="
+                                height:5px; background:#E2E8F0;
+                                border-radius:5px; overflow:hidden;">
+                                <div style="
+                                    width:{percentage}%; height:100%;
+                                    background:{border};">
+                                </div>
                             </div>
                         </div>
-                    </div>
                     """)
 
                 st.markdown(
