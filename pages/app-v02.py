@@ -1,10 +1,6 @@
 import streamlit as st
 
-st.set_page_config(
-    page_title="HandSpell Video",
-    page_icon="🎬",
-    layout="wide",
-)
+st.set_page_config(page_title="Team Handspell V3", page_icon="✋", layout="centered")
 
 import cv2
 import mediapipe as mp
@@ -26,7 +22,7 @@ mp_hands = mp.solutions.hands
 hands = mp_hands.Hands(static_image_mode=False, max_num_hands=2, min_detection_confidence=0.5)
 
 # 3. Streamlit Page Setup UI
-st.set_page_config(page_title="Team Handspell V3", page_icon="✋", layout="centered")
+
 st.title("✋ ASL Sequence Recognition (V3 LSTM)")
 st.write("Evaluate dynamic sign language gestures using our cloud-hosted recurrent neural network.")
 
