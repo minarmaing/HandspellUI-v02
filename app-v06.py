@@ -244,5 +244,43 @@ def main():
                 st.json(results)
 
 
+    st.divider()
+    st.subheader("🎬 Coming next: Recognition from video")
+
+    st.write(
+        "Moving beyond individual images to recognise "
+        "hand movements across a short video."
+    )
+
+    st.info(
+        "Experimental prototype built with a separate model and API. "
+        "Prediction accuracy is still being evaluated and improved."
+    )
+
+    with st.expander("Explore the next step"):
+        st.markdown(
+            """
+            **Planned experience**
+
+            1. Upload a short video of a hand sign.
+            2. Track hand landmarks across video frames.
+            3. Analyse the movement sequence.
+            4. Predict the sign.
+
+            **Potential extension:** recognise movement-based letters
+            such as **J** and **Z**.
+            """
+        )
+
+        st.link_button(
+            "Open experimental video prototype ↗",
+            "https://handspell-landmarks-asl-api-v03-77400974703.europe-west1.run.app/predict",
+        )
+
+        st.caption(
+            "Current demo: static images and fingerspelled words. "
+            "Next milestone: reliable recognition of moving signs."
+        )
+
 if __name__ == "__main__":
     main()
