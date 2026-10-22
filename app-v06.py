@@ -1,4 +1,5 @@
 """HandSpell demo. Start with: python -m streamlit run app.py"""
+
 import hashlib
 import html
 import io
@@ -10,7 +11,6 @@ from urllib.parse import urlsplit, urlunsplit
 import requests
 import streamlit as st
 from PIL import Image, ImageOps, UnidentifiedImageError
-
 
 NO_HAND = {"NO HAND", "NO HAND/SIGN", "NO_HAND"}
 ALPHABET = set("ABCDEFGHIKLMNOPQRSTUVWXY")  # Static letters: excludes J and Z.
@@ -110,7 +110,8 @@ def render_result(result, threshold):
 
 def main():
     st.set_page_config(page_title="HandSpell Studio", page_icon="✋", layout="wide")
-    st.markdown("""<style>
+    st.markdown(
+        """<style>
       .stApp {background:#ffffff; color:#283142;}
       [data-testid="stSidebar"] {background:#f0f3f8;}
       h1 {color:#ff535b !important;}
@@ -120,7 +121,9 @@ def main():
       .word {padding:24px; background:#f7f9fc; border:1px solid #e5eaf2;
           border-radius:14px; color:#ff535b; font-size:2.5rem;
           font-weight:700; letter-spacing:.12em; overflow-wrap:anywhere;}
-    </style>""", unsafe_allow_html=True)
+    </style>""",
+        unsafe_allow_html=True,
+    )
 
     configured_url = os.getenv("API_URL", "")
     if not configured_url:
@@ -132,8 +135,14 @@ def main():
     with st.sidebar:
         st.header("⚙️ Demo settings")
         mode = st.radio("Translation mode", ["Single letter", "Spell a word"])
-        threshold = st.slider("Minimum displayed score", 0.0, 1.0, 0.0, 0.05,
-            help="Below this score, the word uses ?. This does not change the model.")
+        threshold = st.slider(
+            "Minimum displayed score",
+            0.0,
+            1.0,
+            0.0,
+            0.05,
+            help="Below this score, the word uses ?. This does not change the model.",
+        )
         st.caption("Model scores are not a guarantee of correctness.")
         st.divider()
         st.subheader("Backend")
@@ -157,22 +166,39 @@ def main():
         st.header("📥 Image input")
         st.caption("Use good lighting and keep the whole hand and wrist visible.")
         if mode == "Single letter":
-            source = st.radio("Input", ["Upload image", "Take a photo"], horizontal=True)
-            upload = (st.file_uploader("Choose an image", type=["jpg", "jpeg", "png"],
-                       key="single_upload") if source == "Upload image"
-                      else st.camera_input("Take a hand sign photo"))
+            source = st.radio(
+                "Input", ["Upload image", "Take a photo"], horizontal=True
+            )
+            upload = (
+                st.file_uploader(
+                    "Choose an image", type=["jpg", "jpeg", "png"], key="single_upload"
+                )
+                if source == "Upload image"
+                else st.camera_input("Take a hand sign photo")
+            )
             files = [upload] if upload is not None else []
         else:
             source = "Upload images"
-            st.info("Number files in word order: 01_T.jpg, 02_I.jpg, 03_G.jpg, 04_E.jpg, 05_R.jpg.")
-            files = st.file_uploader("Choose images (maximum 12)",
-                type=["jpg", "jpeg", "png"], accept_multiple_files=True, key="word_upload")
+            st.info(
+                "Number files in word order: 01_T.jpg, 02_I.jpg, 03_G.jpg, 04_E.jpg, 05_R.jpg."
+            )
+            files = st.file_uploader(
+                "Choose images (maximum 12)",
+                type=["jpg", "jpeg", "png"],
+                accept_multiple_files=True,
+                key="word_upload",
+            )
             files = sorted(files, key=lambda f: f.name.lower())
             if len(files) > 12:
                 st.warning("Please select at most 12 images for this demo.")
                 st.stop()
 
-        signature = (url, mode, source, tuple((f.name, hashlib.sha256(f.getvalue()).hexdigest()) for f in files))
+        signature = (
+            url,
+            mode,
+            source,
+            tuple((f.name, hashlib.sha256(f.getvalue()).hexdigest()) for f in files),
+        )
         if st.session_state.get("input_signature") != signature:
             st.session_state["input_signature"] = signature
             st.session_state["results"] = []
@@ -182,7 +208,12 @@ def main():
             try:
                 image, encoded = read_image(file)
                 prepared.append({"name": file.name, "image": image, "bytes": encoded})
-            except (UnidentifiedImageError, OSError, ValueError, Image.DecompressionBombError) as exc:
+            except (
+                UnidentifiedImageError,
+                OSError,
+                ValueError,
+                Image.DecompressionBombError,
+            ) as exc:
                 st.error(f"Cannot read {file.name}: {exc}")
 
         if mode == "Single letter" and prepared:
@@ -190,8 +221,11 @@ def main():
         elif prepared:
             st.write("Order:", " → ".join(item["name"] for item in prepared))
 
-        run = st.button("⚡ Translate" if mode == "Single letter" else "⚡ Translate word",
-            type="primary", disabled=not prepared or len(prepared) != len(files))
+        run = st.button(
+            "⚡ Translate" if mode == "Single letter" else "⚡ Translate word",
+            type="primary",
+            disabled=not prepared or len(prepared) != len(files),
+        )
         if run:
             results = []
             with st.spinner("Reading hand signs…"):
@@ -210,12 +244,29 @@ def main():
             st.info("Choose your images and select Translate.")
         elif mode == "Single letter":
             render_result(results[0], threshold)
+
+            candidates = results[0].get("top_candidates", [])
+            if candidates:
+                st.write("Top 3 candidates")
+                for rank, candidate in enumerate(candidates, start=1):
+                    label = "Highest score" if rank == 1 else f"Candidate {rank}"
+
+                    st.write(
+                        f"{label}: **{candidate['letter']}** "
+                        f"— {candidate['confidence']:.1%}"
+                    )
         else:
             word = "".join(accepted_letter(r, threshold) for r in results)
             st.subheader("Predicted word")
-            st.markdown(f'<div class="word">{html.escape(word)}</div>', unsafe_allow_html=True)
-            st.caption("? means no detection, a failed request, or a score below your threshold.")
-            st.caption("Letters are joined in image order; no spelling correction is applied.")
+            st.markdown(
+                f'<div class="word">{html.escape(word)}</div>', unsafe_allow_html=True
+            )
+            st.caption(
+                "? means no detection, a failed request, or a score below your threshold."
+            )
+            st.caption(
+                "Letters are joined in image order; no spelling correction is applied."
+            )
 
     if mode == "Spell a word" and prepared:
         st.divider()
@@ -243,7 +294,6 @@ def main():
             with st.expander("All API responses"):
                 st.json(results)
 
-
     st.divider()
     st.subheader("🎬 Coming next: Recognition from video")
 
@@ -258,8 +308,7 @@ def main():
     )
 
     with st.expander("Explore the next step"):
-        st.markdown(
-            """
+        st.markdown("""
             **Planned experience**
 
             1. Upload a short video of a hand sign.
@@ -269,8 +318,7 @@ def main():
 
             **Potential extension:** recognise movement-based letters
             such as **J** and **Z**.
-            """
-        )
+            """)
 
         if st.button("🎬 Open experimental video prototype"):
             st.switch_page("pages/app-v02.py")
@@ -279,6 +327,7 @@ def main():
             "Current demo: static images and fingerspelled words. "
             "Next milestone: reliable recognition of moving signs."
         )
+
 
 if __name__ == "__main__":
     main()
